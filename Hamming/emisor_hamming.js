@@ -12,7 +12,7 @@ function generarCodigoHamming(bitsDatos) {
     let r = calcularBitsParidad(m);
     let n = m + r;
 
-    let codigo = new Array(n + 1);
+    let codigo = new Array(n + 1).fill(0);
     let j = 0;
 
     // Colocar bits de datos en posiciones que no son potencias de 2
@@ -37,11 +37,22 @@ function generarCodigoHamming(bitsDatos) {
         codigo[pos] = suma % 2;
     }
 
+    // Calcular bit de paridad global
+    let sumaTotal = 0;
+    for (let i = 1; i <= n; i++) {
+        sumaTotal += codigo[i];
+    }
+    let bitGlobal = sumaTotal % 2; // 0 si suma par, 1 si suma impar
+
+    // Añadir bit de paridad global al final
+    codigo.push(bitGlobal);
+
     return {
         m: m,
         r: r,
         n: n,
-        codigo: codigo.slice(1).join('')
+        codigo: codigo.slice(1).join(''), // excluye índice 0
+        bitGlobal: bitGlobal
     };
 }
 
@@ -49,12 +60,13 @@ function generarCodigoHamming(bitsDatos) {
 const bitsDatos = process.argv[2];
 
 if (!bitsDatos || !/^[01]+$/.test(bitsDatos)) {
-    console.log("Uso: node emisor.js <bits_de_datos>");
-    console.log("Ejemplo: node emisor.js 1011");
+    console.log("Uso: node emisor_emisor.js <bits_de_datos>");
+    console.log("Ejemplo: node emisor_hamming.js 1011");
     process.exit(1);
 }
 
 let resultado = generarCodigoHamming(bitsDatos);
 console.log(`Bits de datos: ${bitsDatos}`);
 console.log(`Bits de paridad (r): ${resultado.r}`);
-console.log(`Código Hamming: ${resultado.codigo}`);
+console.log(`Bit de paridad global: ${resultado.bitGlobal}`);
+console.log(`Código Hamming extendido: ${resultado.codigo}`);

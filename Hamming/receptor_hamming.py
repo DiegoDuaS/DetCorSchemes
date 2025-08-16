@@ -1,34 +1,42 @@
-def detectar_error(codigo):
-    n = len(codigo)
-    codigo = [int(bit) for bit in codigo]
-    codigo.insert(0, None)  # Para que podamos usar índices desde 1 y no desde 0
-
-    # Ahora vamos a calcular cuántos bits de paridad hay según la longitud del código
+def detectar_error_extendido(codigo):
+    n = len(codigo) - 1  # excluimos el bit global
+    codigo = [None] + [int(b) for b in codigo]  # indices desde 1
     r = 0
     while (2 ** r) <= n:
         r += 1
 
-    # Aquí vamos a checar si hay error y en qué posición está
     posicion_error = 0
     for i in range(r):
         pos = 2 ** i
         suma = 0
-        # Sumamos los bits que participan en esta paridad (los que tienen el bit 'pos' prendido)
         for k in range(1, n + 1):
             if (k & pos) != 0:
                 suma += codigo[k]
-        # Si la suma no es par, entonces hay error en ese bit de paridad
         if suma % 2 != 0:
-            posicion_error += pos  # Acumulamos la posición del error
+            posicion_error += pos
 
-    return posicion_error, codigo, r
+    # Paridad global recibida
+    bit_global = codigo[-1]
+    suma_total = sum(codigo[1:n+1]) % 2  # suma solo bits de Hamming
+
+    if posicion_error == 0 and suma_total == bit_global:
+        estado = "Sin errores"
+    elif posicion_error != 0 and suma_total != bit_global:
+        estado = f"Un error en la posición {posicion_error}"
+    elif posicion_error != 0 and suma_total == bit_global:
+        estado = "Detectados 2 errores o más (no corregibles)"
+    else:
+        estado = "Situación inesperada"
+
+    return estado, codigo, r
+
 
 
 def extraer_datos(codigo):
-    """Sacamos los bits de datos quitando las posiciones de los bits de paridad"""
+    """Sacamos los bits de datos quitando las posiciones de los bits de paridad y el global"""
     datos = []
-    for i in range(1, len(codigo)):
-        # Si la posición NO es potencia de 2, entonces es dato, lo agregamos
+    for i in range(1, len(codigo)-1):
+        # Si la posición NO es potencia de 2, entonces es dato
         if (i & (i - 1)) != 0:
             datos.append(str(codigo[i]))
     return "".join(datos)
@@ -42,27 +50,29 @@ def main():
         print("Error: el mensaje debe contener solo 0 y 1.")
         return
 
-    pos_error, codigo, r = detectar_error(recibido)
+    estado, codigo, r = detectar_error_extendido(recibido)
 
     print(f"\nMensaje recibido (con paridad): {recibido}")
+    print(estado)
 
-    if pos_error == 0:
-        print("No se detectaron errores.")
+    if "Un error" in estado:
+        # Extraer posición del error del mensaje
+        pos_error = int(estado.split()[-1])
+        tipo_bit = "paridad" if (pos_error & (pos_error - 1)) == 0 else "dato"
+        print(f"!!!! Corrigiendo bit en posición {pos_error} (bit de {tipo_bit}).")
+        # Corregimos solo el primer error
+        codigo[pos_error] = 1 - codigo[pos_error]
+        corregido = "".join(str(bit) for bit in codigo[1:])
+        print(f"Mensaje corregido (con paridad): {corregido}")
         mensaje_limpio = extraer_datos(codigo)
         print(f"Mensaje original (sin paridad): {mensaje_limpio}")
-        return
 
-    # Saber si el error fue en un bit de paridad o en uno de datos
-    tipo_bit = "paridad" if (pos_error & (pos_error - 1)) == 0 else "dato"
-    print(f"!!!! Error detectado en la posición {pos_error} (bit de {tipo_bit}).")
+    elif "2 errores" in estado:
+        print("No se puede corregir el mensaje debido a que hay 2 errores detectados.")
 
-    # Corregimos el bit con error (cambiamos 0 a 1 o 1 a 0)
-    codigo[pos_error] = 1 - codigo[pos_error]
-    corregido = "".join(str(bit) for bit in codigo[1:])
-    print(f"Mensaje corregido (con paridad): {corregido}")
-
-    mensaje_limpio = extraer_datos(codigo)
-    print(f"Mensaje original (sin paridad): {mensaje_limpio}")
+    else:  # Sin errores
+        mensaje_limpio = extraer_datos(codigo)
+        print(f"Mensaje original (sin paridad): {mensaje_limpio}")
 
 
 if __name__ == "__main__":
