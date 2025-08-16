@@ -41,6 +41,27 @@ def extraer_datos(codigo):
             datos.append(str(codigo[i]))
     return "".join(datos)
 
+def verificar_y_corregir_hamming(trama_binaria):
+    """
+    Función principal para el receptor.
+    Recibe la trama Hamming completa (con paridad) y devuelve:
+    - mensaje limpio si se puede decodificar
+    - None si hay 2 o más errores detectados
+    """
+    estado, codigo, r = detectar_error_extendido(trama_binaria)
+
+    if "Un error" in estado:
+        # Corregir el primer error
+        pos_error = int(estado.split()[-1])
+        codigo[pos_error] = 1 - codigo[pos_error]
+
+    elif "2 errores" in estado:
+        return None  # No se puede corregir
+
+    # Extraemos los datos originales (sin bits de paridad)
+    mensaje_limpio = extraer_datos(codigo)
+    return mensaje_limpio
+
 
 def main():
     recibido = input("Ingrese el mensaje Hamming recibido: ").strip()

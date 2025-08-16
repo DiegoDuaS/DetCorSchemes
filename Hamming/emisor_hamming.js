@@ -1,4 +1,4 @@
-function calcularBitsParidad(m) {
+export function calcularBitsParidad(m) {
     let r = 1;
     // Buscamos cuántos bits de paridad hacen que se cumpla la fórmula
     while (m + r + 1 > Math.pow(2, r)) {
@@ -7,7 +7,7 @@ function calcularBitsParidad(m) {
     return r;
 }
 
-function generarCodigoHamming(bitsDatos) {
+export function generarCodigoHamming(bitsDatos) {
     let m = bitsDatos.length;
     let r = calcularBitsParidad(m);
     let n = m + r;
@@ -56,17 +56,3 @@ function generarCodigoHamming(bitsDatos) {
     };
 }
 
-// Leer bits desde argumento de la terminal
-const bitsDatos = process.argv[2];
-
-if (!bitsDatos || !/^[01]+$/.test(bitsDatos)) {
-    console.log("Uso: node emisor_emisor.js <bits_de_datos>");
-    console.log("Ejemplo: node emisor_hamming.js 1011");
-    process.exit(1);
-}
-
-let resultado = generarCodigoHamming(bitsDatos);
-console.log(`Bits de datos: ${bitsDatos}`);
-console.log(`Bits de paridad (r): ${resultado.r}`);
-console.log(`Bit de paridad global: ${resultado.bitGlobal}`);
-console.log(`Código Hamming extendido: ${resultado.codigo}`);

@@ -16,6 +16,27 @@ def fletcher16(bytes_list):
 
     return (sum2 << 8) | sum1
 
+def verificar_fletcher(trama_binaria):
+    """
+    Recibe la trama binaria completa (datos + checksum Fletcher-16)
+    Devuelve:
+    - los datos si el checksum coincide
+    - None si hay error detectado
+    """
+    if len(trama_binaria) < 16:
+        return None  # demasiado corta
+
+    datos_bin = trama_binaria[:-16]
+    checksum_recibido = int(trama_binaria[-16:], 2)
+
+    bytes_datos = binario_a_bytes(datos_bin)
+    checksum_calculado = fletcher16(bytes_datos)
+
+    if checksum_recibido == checksum_calculado:
+        return datos_bin  # mensaje válido
+    else:
+        return None  # error detectado
+
 def main():
     recibido = input("Ingrese el mensaje completo (datos + checksum): ").strip()
 
